@@ -1,0 +1,439 @@
+- criando o projeto --> npx create-expo-app --template
+
+- iniciando o projeto --> npx expo start
+
+- mapeamento de importações, --> npm install --save-dev babel-plugin-module-resolver
+- configuração "babel.config.js e tsconfig.json"
+
+- instalação das fontes"
+- npx expo install expo-font @expo-google-fonts/roboto
+- importa no app -> import {useFonts, Roboto_400Regular, Roboto_700Bold } from '@expo-google-fonts/roboto'
+- configuraçao do estado que carrega as fontes configuradas const [fontsLoaded] = useFonts([ Roboto_400Regular, Roboto_700Bold]);
+
+
+- instalando a Library "Native Base" => ganha muito na produtividade, componentes prontos
+- npm install native-base
+- instalando react-native-svg => trabalhar com svg
+- npx expo install react-native-svg@12.1.1
+- instalando react-native-safe-area-context
+- npx expo install react-native-safe-area-context@3.3.2
+
+- importa no app -> import { NativeBaseProvider } from 'native-base'
+- definição do thema da aplicação "theme/index.ts "modifica o thema padrão do Native Base"
+- Configuração do thema no app da aplicação usando o 'NativeBaseProvider do NativeBase'
+- Coloca o NativeBaseProvider em volta da aplicação com a definição do theme do arquivo theme/index.ts
+<NativeBaseProvider theme={THEME}>
+...
+</NativeBaseProvider>
+
+- Trabalhando com imagens
+- definição das typagems para usar imagens na aplicação '@types/png.d.ts'.
+
+- Trabalhando com svg
+- instale outra biblioteca para trabalhar o svg como componentes
+- npm i react-native-svg-transformer --save-dev
+- configuração da biblioteca no arquivo metro.config.js => responsavel para podemos utilizar o svg na mesma sintaxe de um componente
+- definição das typagems para usar imagens na aplicação '@types/svg.d.ts'.
+
+- Navegação
+- Stack Navigator  "Cora da aplicação" -> npm install @react-navigation/native
+- dependencias que precisa lidar com a parte da navegação e suguras da aplicação -> npx expo install react-native-screens react-native-safe-area-context
+- extrategia de naveção que será utilizada de forma publica-> npm install @react-navigation/native-stack
+- extrategia de navegação que será utilizada de forma privada => npm install @react-navigation/bottom-tabs
+
+routes/auth.routes
+routes/app.routes
+index.tsx
+
+- Routes
+- 2 rotas Publica e Privada
+- 2 typagem para rota de aplicação, não faça a typagem generica "navegation.d.ts"
+- type AuthRoutes = {
+    signIn: undefined;
+    signUp: undefined;
+}
+export type AuthNavigatorRoutesProps = NativeStackNavigationProp<AuthRoutes>;
+
+const { Navigator, Screen } = createNativeStackNavigator<AuthRoutes>();
+
+- type AppRoutes = {
+    home: undefined;
+    history: undefined;
+    profile: undefined;
+    exercice: undefined;
+};
+
+export type AppNavigatorRoutesProps = BottomTabNavigationProp<AppRoutes>;
+
+const { Navigator, Screen } = createBottomTabNavigator<AppRoutes>();
+
+
+-selecionando a foto do usuario e editando
+- npx expo install expo-image-picker
+-adicionar o plugin de configuração no app.json
+
+"plugins": [
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "The app accesses your photos to let you share them with your friends."
+        }
+      ]
+    ],
+
+buscando informações do arquivo selecionando 'foto'
+npx expo install expo-file-system
+
+
+formularios
+React-hook-form
+- npm install react-hook-form
+
+(control, handleSubmit, formState {erros })
+
+-Usa o useForm() para acessar o "control" passado para todos os inputs sendo controlados no mesmo formulario,
+-Controller do react-hook-form fica responsavel para amarzenar os valores do estado atravez da proprieda 'field'
+-handleSubmit ela passa todo o conteudo do formulario para outra funcão de amarzenamento
+-defaultValues -> define valores iniciais
+
+
+regras nos formularios
+-rules:
+<Controller
+                        control={control}
+                        name='email'
+                        rules={{
+                            required: 'Informe o e-mail',
+                            pattern: {
+                                value:/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+                                message: 'E-mail inválido'
+                              }
+                        }}
+...
+</Controller>                        
+
+-formState: { errors } expoe os erros para o usuario na aplicação
+
+ou podemo usar 2 bibliotecas 
+resolvers -> integração do react com o hookform
+yup -> bibioeta de validação
+npm install @hookform/resolvers yup
+
+
+=============================back-end=================================
+=> pasta api
+=> npm run dev, roda o servidor na porta 3333
+
+instalação do aplicativo "beekpeer studio" visualização das tabelas
+
+=> criando um novo usuario
+- usando o fetch, function Asycn Await do Java Script 
+// function handleSignUp({ name, email, password }: FormDataProps) {
+    async function handleSignUp({ name, email, password }: FormDataProps) {
+    // fetch('http://192.168.0.16:3333/users', {
+       const response = await fetch('http://192.168.0.16:3333/users', {
+            method: 'POST',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ name, email, password })
+        })
+
+        const data = await response.json();
+        console.log(data)
+            
+        // .then(response => response.json())
+        // .then(data => console.log(data))
+    }
+
+=> usando a bibioeta Axios 'cliente http' fazer todas as requisições
+=> npm i axios
+
+-> cria a pasta services/api.ts
+-> define as configurações do axios
+
+const api = axios.create({
+    baseURL: 'http://192.168.0.16:3333'
+});
+
+=> criando um novo usuario
+- usando o fetch, function Asycn Await do Java Script 
+
+async function handleSignUp({ name, email, password }: FormDataProps) {
+    const response = await api.post('/users', { name, email, password });
+    console.log(response.data)
+}
+
+- tratando erros
+async function handleSignUp({ name, email, password }: FormDataProps) {
+        try{
+            const response = await api.post('/users', { name, email, password });
+            console.log(response.data)
+        } catch (error) {
+            if(axios.isAxiosError(error)) {
+                Alert.alert(error.response?.data.message);
+            }
+        }
+}
+
+- tratando erros usando o interceptors
+- criar a pasta utils/AppError.ts define as configurações
+- na pasta services/Api.ts define as configuraçoes do interceptors
+
+api.interceptors.response.use((response) => response, (error) => {
+    if(error.response && error.response.data) {
+      return Promise.reject(new AppError(error.response.data.message))
+    } else {
+      return Promise.reject(error)
+    }
+});
+
+Contexto compatilhar dados entre os componentes
+-cria pasta contexts/AuthContext.tsx
+
+import { Children, ReactNode, createContext } from 'react'
+
+export const AuthContext = createContext({})
+
+-configura o arquivo no app.tsx
+import { AuthContext } from '@contexts/AuthContext';
+
+  return (
+    <NativeBaseProvider theme={THEME}>
+        ...
+        <AuthContext.Provider value={{
+          id: '1',
+          name: 'lauande',
+          email: 'lauande@lauande.com.br',
+          avatar: 'rodrigolauande.png'
+        }}>
+          {fontsLoaded ? <Routes/> : <Loading /> }
+        </AuthContext.Provider>
+    </NativeBaseProvider>
+  );
+}
+
+-configura no arquivo routes/index.tsx
+
+const contextData = useContext(AuthContext)
+console.log('usuario logado', contextData)
+
+pronto consigo ter acesso aos dados
+
+=> tipagem DTO
+-cria a pasta dtos/UserDTO.ts, define e exporte as tipagems
+
+=> tipagem DTO no arquivo AuthContext.tsx
+import { UserDTO } from '@dtos/UserDTO'
+
+export type AuthContextDataProps = {
+    user: UserDTO
+}
+
+export const AuthContext = createContext<AuthContextDataProps>({} as AuthContextDataProps)
+
+=> define a tipagem no app.tsx
+        <AuthContext.Provider value={{
+          user: {
+            id: '1',
+            name: 'lauande',
+            email: 'lauande@lauande.com.br',
+            avatar: 'rodrigolauande.png'
+          }
+        }}>
+          {fontsLoaded ? <Routes/> : <Loading /> }
+        </AuthContext.Provider>
+
+        agora você tem as tipagens dos arquivos 'user'
+
+
+=> refatoração do Context()
+-> cria uma nova tipagem e uma nova função para ser exportada no arquivo AuthContext.tsx
+
+import { UserDTO } from '@dtos/UserDTO'
+import { Children, ReactNode, createContext } from 'react'
+
+export type AuthContextDataProps = {
+    user: UserDTO
+}
+
+type AuthContextProviderProps = {
+    children: ReactNode;
+}
+
+export const AuthContext = createContext<AuthContextDataProps>({} as AuthContextDataProps)
+
+export function AuthContextProvider ({children}: AuthContextProviderProps) {
+    return (
+        <AuthContext.Provider value={{
+            user:  {
+              id: '1',
+              name: 'lauande',
+              email: 'lauande@lauande.com.br',
+              avatar: 'rodrigolauande.png'
+            }
+          }}>
+            {children}
+          </AuthContext.Provider>
+    )
+}
+
+no arquivo app.tsx refatore o AuthContext.Provider usando a nova função criada no arquivo Auth.Context.tsx
+
+"AuthContextProvider"
+
+=> criando o proprio "hook"
+cria uma nova pasta 'hooks/useAuth.tsx
+
+import {useContext} from 'react
+import {AuthContext} from '@context/AuthContext'
+
+export function useAuth() {
+  const context = useContext(AuthContext)
+
+  return context
+}
+
+a função vai pegar toda a tipagem definida no AuthContext => User = UserDTO
+
+dentro do arquivo routes.index.tsx declara a nova função criada
+
+import {useAuth} from '@hooks/useAuth'
+
+const { user } = useAuth()
+
+=> Compartilhando estado e atualizando o estado dentro do Context()
+-no arquivo AuthContext.tsx redefina a função AuthContextProvider()
+-colocando as informações do userDTO em um estado 'user'
+export function AuthContextProvider ({children}: AuthContextProviderProps) {
+    const [ user, setUser ] = useState({
+        id: '1',
+        name: 'Rodrigohenriquelauande',
+        email: 'lauande@lauande.com.br',
+        avatar: 'rodrigolauande.png'
+    })
+
+    return (
+        <AuthContext.Provider value={{ user, setUser }}>
+            {children}
+          </AuthContext.Provider>
+    )
+}
+
+-no arquivo screens/signIn atualize a função handleLogin()
+function handleLogin({email, password}: FormDataProps) {
+        setUser({
+            id: '',
+            name: '',
+            email,
+            avatar: '',
+        })
+    }
+
+
+=>pode ser melhorado centralizando dentro do contexto criando uma nova função signIn()
+AuthContext.tsx
+AuthContextProvider()
+function singIn(email: string, password: string) {
+        setUser({
+            id: '',
+            name: '',
+            email,
+            avatar: '',
+        })
+}
+
+screens/signIn
+function handleLogin({email, password}: FormDataProps) {
+        singIn(email, password)
+    }
+
+=> buscando dados do usuario
+- AuthContext.tsx
+- AuthContextProvider
+
+export type AuthContextDataProps = {
+    user: UserDTO
+    singIn: (email: string, passoword: string) => Promise<void>
+}
+
+async function singIn(email: string, password: string) {
+        try {
+            const { data } = await api.post('/sessions', { email, password });
+            
+            if (data.user) {
+                setUser(data.user)
+            }
+        } catch (error) {
+            throw error
+        }
+}
+
+=> redirecionamento do usuario logado
+routes/index.tsx
+
+const { user } = useAuth()
+console.log('USUÁRIO LOGADO', user)
+
+<Box flex={1} bg='gray.700'>
+<NavigationContainer theme={theme}>
+    {user.id ? <AppRoutes/> : <AuthRoutes />}
+</NavigationContainer>
+</Box>
+
+=> AsyncStorage
+- persistir as informações do usuario logado na aplicação
+npx expo install @react-native-async-storage/async-storage
+
+=> criar o arquivo storage/storageConfig.ts
+const USER_STORAGE = '@gymignite:user';
+
+export { USER_STORAGE };
+
+=> criar o arquivo storage/storageUser.ts
+import AsyncStorage from "@react-native-async-storage/async-storage";
+
+import { UserDTO } from '@dtos/UserDTO';
+import { USER_STORAGE } from "./storageConfig";
+
+export async function storageUserSave(user: UserDTO) {
+    await AsyncStorage.setItem(USER_STORAGE, JSON.stringify(user));
+}
+
+export async function storageUserGet() {
+    const storage = await AsyncStorage.getItem(USER_STORAGE);
+
+    const user: UserDTO = storage ? JSON.parse(storage) : {};
+
+    return user;
+}
+
+
+=> usa a função storageUserSave() e storageUserGet() no arquivo AuthContext.tsx
+async function singIn(email: string, password: string) {
+        try {
+            const { data } = await api.post('/sessions', { email, password });
+            
+            if (data.user) {
+                setUser(data.user)
+                storageUserSave(data.user)
+            }
+        } catch (error) {
+            throw error
+        }
+    }
+
+    async function loadUserData() {
+        const userLogged = await storageUserGet();
+
+        if (userLogged) {
+            setUser(userLogged)
+        }
+    }
+
+    useEffect(() => {
+        loadUserData()
+    },[]) 
+
+=> Refresh token - atualizar o token da aplicação
